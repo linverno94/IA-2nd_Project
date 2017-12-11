@@ -56,7 +56,9 @@ def parser(filename):
 
 def convert(sentence):
     resolve_eq(sentence)
+    print(sentence)
     resolve_imp(sentence)
+    print(sentence)
     apply_neg(sentence)
     
     global check
@@ -86,17 +88,19 @@ def resolve_eq(sentence):
         sentence[2] = new_condition2
         
     for element in sentence:
-        if len(element)>=3 and type(element) != str:
+        if len(element)>=2 and type(element) != str:
             resolve_eq(element)
 
 def resolve_imp(sentence):
-    if sentence[0] == "=>":
+    if sentence[0] == '=>':
         element1 = ["not", sentence[1]]
+        element2 = sentence[2]
         sentence[0] = "or"
         sentence[1] = element1
-     
+        sentence[2] = element2
+        
     for element in sentence:
-        if len(element)>=3 and type(element) != str:
+        if len(element)>=2 and type(element) != str:
             resolve_imp(element)
             
             
@@ -274,7 +278,7 @@ def check_subsets(clauses): #Verifies if there is any clause that is subset of a
 #MAIN
 #------------------------------------------------------------------------------                
 
-s = parser("erro.txt")
+s = parser("ex_4.txt")
 cnf = []
 for sentence in s:
     clauses = convert(sentence)
@@ -283,13 +287,13 @@ for sentence in s:
         cnf.append(clause)
 
 #SIMPLIFICATION RULES
-global changes #Flag that lets the program know if there are no simplifications left to be done
-changes = 1
-while changes ==1:
-    changes=0
-    remove_tautologies(cnf) #When a component and its complement exist in the same clause
-    check_subsets(cnf) #NAO GOSTO DISTO, PERGUNTAR SE ISTO E VERDADE. Ao menos remove os duplicados...
-    remove_redundancies(cnf) #Cheks if every component has its complement
+#global changes #Flag that lets the program know if there are no simplifications left to be done
+#changes = 1
+#while changes ==1:
+#    changes=0
+#    remove_tautologies(cnf) #When a component and its complement exist in the same clause
+#    check_subsets(cnf) #NAO GOSTO DISTO, PERGUNTAR SE ISTO E VERDADE. Ao menos remove os duplicados...
+#    remove_redundancies(cnf) #Cheks if every component has its complement
 
 #Write to TXT FILE
 filepath='cnf.txt'
