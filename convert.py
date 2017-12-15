@@ -56,9 +56,7 @@ def parser(filename):
 
 def convert(sentence):
     resolve_eq(sentence)
-    print(sentence)
     resolve_imp(sentence)
-    print(sentence)
     apply_neg(sentence)
     
     global check
@@ -187,6 +185,10 @@ def eliminate_or(clauses):
 
 def remove_parens(clause): #This function removes excessive parentises in the clauses
     temp = []              #resulted from previous operations
+    
+    if len(clause) == 1 and type(clause[0]) == list:
+        clause[:] = clause[0]
+        
     for components in clause:
         if type(components) == list and components[0] != "not": #if is not a negated literal
             temp = components[:]
@@ -260,40 +262,49 @@ def check_subsets(clauses): #Verifies if there is any clause that is subset of a
         temp.remove(subset)
         for clause in temp:
             is_subset = True
-            if is_literal(subset) == False:
-                for element in subset:
-                    if element not in clause and subset != clause:
-                        is_subset = False
-                        break
-            else:
+            
+            if is_literal(subset) == True:
                 if subset not in clause and subset != clause:
                         is_subset = False
+                        
+            else:
+                for element in subset:
+                    if element not in clause:
+                        is_subset = False
+                        break
                 
             if is_subset == True:
                 changes = 1
                 clauses.remove(clause)
-                percorrer.remove(clause)
+                if clause in percorrer:
+                    percorrer.remove(clause)
+                
 
 #------------------------------------------------------------------------------
 #MAIN
 #------------------------------------------------------------------------------                
 
-s = parser("ex_4.txt")
+s = parser("p1.txt")
 cnf = []
 for sentence in s:
     clauses = convert(sentence)
     for clause in clauses:
-        clause = remove_duplicates(clause)
+        clause = remove_duplicates(clause) #removes duplicates inside each clause
         cnf.append(clause)
 
 #SIMPLIFICATION RULES
-#global changes #Flag that lets the program know if there are no simplifications left to be done
-#changes = 1
-#while changes ==1:
-#    changes=0
-#    remove_tautologies(cnf) #When a component and its complement exist in the same clause
-#    check_subsets(cnf) #NAO GOSTO DISTO, PERGUNTAR SE ISTO E VERDADE. Ao menos remove os duplicados...
-#    remove_redundancies(cnf) #Cheks if every component has its complement
+global changes #Flag that lets the program know if there are no simplifications left to be done
+changes = 1
+while changes ==1:
+    changes=0
+    remove_tautologies(cnf) #When a component and its complement exist in the same clause
+    check_subsets(cnf) #NAO GOSTO DISTO, PERGUNTAR SE ISTO E VERDADE. Ao menos remove os duplicados...
+    remove_redundancies(cnf) #Cheks if every component has its complement
+
+#Remove excessive parentises after simplification
+for clause in cnf:
+    remove_parens(clause)
+
 
 #Write to TXT FILE
 filepath='cnf.txt'
