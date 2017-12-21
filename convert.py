@@ -1,5 +1,11 @@
-#SECOND MINI PROJECT
-#CONVERT FILE
+# =============================================================================
+# ARTIFICIAL INTELIGENCE 1ST SEMETRE 2017-2018 TECNICO LISBOA
+# CNF CONVERTER
+
+#AUTORS:
+#Leonor Inverno da Piedade 78588
+#Rafael Freitas 78135
+# =============================================================================
 
 from datetime import datetime
 from collections import defaultdict
@@ -28,23 +34,24 @@ def complement(literal):
     if is_negated(literal) == True:
                 to_search = literal[1]
     else:
-        to_search = ["not", literal]
+        to_search = ["not", literal[0]]
     
     return to_search 
 
 #PARSER FUNCTION (to analyse the problem's information)    
     
-def parser(filename):
+def parser():
     try:
-        info = open(filename, "r")
+        #info = open(filename, "r")
         list_sentences = []
-        for line in info:
+        for line in sys.stdin.readlines():
+        #for line in info:
             line = line.replace("(", "[")
             line = line.replace(")", "]")
             sentence = eval(line)
             sentence = list(sentence)
             list_sentences.append(sentence)
-        info.close
+        #info.close
         return list_sentences
 
     except FileNotFoundError:
@@ -74,7 +81,7 @@ def convert(sentence):
 
 
 #------------------------------------------------------------------------------
-#CONVERSION FUNCTIONS
+#CNF CONVERSION FUNCTIONS
 #------------------------------------------------------------------------------
 
 def resolve_eq(sentence):
@@ -183,6 +190,17 @@ def eliminate_or(clauses):
         if len(clause)>1:
             eliminate_or(clause)
 
+#------------------------------------------------------------------------------
+#SIMPLIFICATION FUNCTIONS
+#------------------------------------------------------------------------------
+
+def remove_duplicates(clause): #A single clause is inputed
+    newlist = []
+    for literal in clause:
+        if literal not in newlist:
+            newlist.append(literal)
+    return newlist
+
 def remove_parens(clause): #This function removes excessive parentises in the clauses
     temp = []              #resulted from previous operations
     
@@ -197,94 +215,14 @@ def remove_parens(clause): #This function removes excessive parentises in the cl
                 clause.append(element)
             remove_parens(clause)
 
-
-#------------------------------------------------------------------------------
-#SIMPLIFICATION FUNCTIONS
-#------------------------------------------------------------------------------
-
-def remove_duplicates(clause): #A single clause is inputed
-    newlist = []
-    for literal in clause:
-        if literal not in newlist:
-            newlist.append(literal)
-    return newlist
-
-def remove_tautologies(clauses):
-    global changes
-    for clause in clauses:
-        percorrer = []
-        percorrer = clause.copy()
-        if is_literal(clause) == False: #Tautologies are not present in unity clauses
-            for literal in percorrer: 
-                to_search = complement(literal)
-                
-                if to_search in clause:
-                        changes = 1
-                        clause.remove(literal)
-                        clause.remove(to_search)
-        
-        if not clause:
-            clauses.remove(clause) #Remove empty lists in clauses
-
-def remove_redundancies(clauses):
-    percorrer = clauses.copy()
-    while percorrer:
-        clause = percorrer.pop()
-        if is_literal(clause) == True and is_negated(clause) == True:
-            check = 0
-            to_search = complement(clause)
-            for component in clauses:
-                    if to_search in component or to_search == component:
-                        check = 1
-                    
-            if check == 0:
-                clauses.remove(clause)
-            
-        else:
-            for literal in clause:
-                check = 0
-                to_search = complement(literal)
-                for component in clauses:
-                    if to_search in component or to_search == component:
-                        check = 1
-                    
-                if check == 0:
-                    clauses.remove(clause)
-                    break        
-       
-def check_subsets(clauses): #Verifies if there is any clause that is subset of another
-    global changes          #If so, the largest clause is removed
-    percorrer = []         
-    percorrer = clauses.copy()
-    while percorrer:
-        subset = percorrer.pop()
-        temp = clauses.copy()
-        temp.remove(subset)
-        for clause in temp:
-            is_subset = True
-            
-            if is_literal(subset) == True:
-                if subset not in clause and subset != clause:
-                        is_subset = False
-                        
-            else:
-                for element in subset:
-                    if element not in clause:
-                        is_subset = False
-                        break
-                
-            if is_subset == True:
-                changes = 1
-                clauses.remove(clause)
-                if clause in percorrer:
-                    percorrer.remove(clause)
-                
-
 #------------------------------------------------------------------------------
 #MAIN
 #------------------------------------------------------------------------------                
 
-s = parser("p1.txt")
+
+s = parser()
+
+#s = parser("p4.txt")
 cnf = []
 for sentence in s:
     clauses = convert(sentence)
@@ -292,22 +230,22 @@ for sentence in s:
         clause = remove_duplicates(clause) #removes duplicates inside each clause
         cnf.append(clause)
 
-#SIMPLIFICATION RULES
-global changes #Flag that lets the program know if there are no simplifications left to be done
-changes = 1
-while changes ==1:
-    changes=0
-    remove_tautologies(cnf) #When a component and its complement exist in the same clause
-    check_subsets(cnf) #NAO GOSTO DISTO, PERGUNTAR SE ISTO E VERDADE. Ao menos remove os duplicados...
-    remove_redundancies(cnf) #Cheks if every component has its complement
-
+#print("number of arguments: %s" %len(sys.argv))
+        
 #Remove excessive parentises after simplification
 for clause in cnf:
     remove_parens(clause)
 
+#print(cnf)
 
 #Write to TXT FILE
-filepath='cnf.txt'
-with open(filepath, 'w') as file_handler:
-    for item in cnf:
-        file_handler.write("%s \n" % item)
+#filepath='cnf.txt'
+#with open(filepath, 'w') as file_handler:
+for item in cnf:
+    sys.stdout.write("%s" %item)
+    sys.stdout.write("\n")
+#        file_handler.write("%s \n" % item)
+
+
+
+
