@@ -75,14 +75,18 @@ def find_compatible_clause(percorrer, start_index, to_search, already_solved):
 
 #RESOLUTION FUNCTION
         
-def resolution(clause1, clause2): #best if clause1 is smaller then clause2
+def resolution(clause1, clause2): #works iff clause1 is smaller or equal than clause2
     if is_literal(clause1) == True:
         to_search = complement(clause1)
-        for element in clause2:
-            if element == to_search:
-                temp2 = clause2.copy()
-                temp2.remove(to_search)
-                return temp2
+        if is_literal(clause2) == True and is_negated(clause2)==True:
+            if clause2 == to_search:
+                return True
+        else:    
+            for element in clause2:
+                if element == to_search:
+                    temp2 = clause2.copy()
+                    temp2.remove(to_search)
+                    return temp2
     else:
         for element in clause1:
             to_search = complement(element)
@@ -278,7 +282,8 @@ while(solution == False and possible == True):
             result = resolution(to_analyse, compatible_clause)
             already_solved.append([to_analyse, compatible_clause]) 
             #print("Result %s" %result)
-            if result == []:
+            if result == [] or result == True:
+                #A contradition is found
                 #print("FOUND CONTRADITION!")
                 solution = True
             else:

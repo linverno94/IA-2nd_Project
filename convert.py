@@ -229,8 +229,6 @@ for sentence in s:
     for clause in clauses:
         clause = remove_duplicates(clause) #removes duplicates inside each clause
         cnf.append(clause)
-
-#print("number of arguments: %s" %len(sys.argv))
         
 #Remove excessive parentises after simplification
 for clause in cnf:
