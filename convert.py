@@ -16,12 +16,14 @@ import copy
 #GENERAL FUNCTIONS
 #------------------------------------------------------------------------------
 
+#Checks if the inputed literal is negated
 def is_negated(literal):
     if len(literal) == 1:
         return False
     else:
         return True
     
+#Checks if the inputed clause is a literal (unit clause)      
 def is_literal(sentence):
     if len(sentence) == 1:
         return True
@@ -29,7 +31,8 @@ def is_literal(sentence):
         return True
     else:
         return False
-
+    
+#Returns the negation of a inputed literal
 def complement(literal):
     if is_negated(literal) == True:
                 to_search = literal[1]
@@ -42,16 +45,13 @@ def complement(literal):
     
 def parser():
     try:
-        #info = open(filename, "r")
         list_sentences = []
         for line in sys.stdin.readlines():
-        #for line in info:
             line = line.replace("(", "[")
             line = line.replace(")", "]")
             sentence = eval(line)
             sentence = list(sentence)
             list_sentences.append(sentence)
-        #info.close
         return list_sentences
 
     except FileNotFoundError:
@@ -59,22 +59,22 @@ def parser():
         sys.exit()
 
       
-#CONVERSION TO CNF
+#CONVERSION TO CNF ALGORITHM
 
 def convert(sentence):
-    resolve_eq(sentence)
-    resolve_imp(sentence)
-    apply_neg(sentence)
+    resolve_eq(sentence) #1st solves all bidirectional equalities
+    resolve_imp(sentence)#2nd solves all implications 
+    apply_neg(sentence) #3rd moves negations inside each sentence
     
     global check
     check = 0
     
     while check == 0:
         check = 1
-        distributive(sentence)
+        distributive(sentence) #Applies distributive rules
         
     
-    clauses = separate_clauses(sentence)
+    clauses = separate_clauses(sentence) #Separates clauses by "and"
     for clause in clauses:
         remove_parens(clause) #Removes excessive parentises in clauses
     return clauses
@@ -84,6 +84,7 @@ def convert(sentence):
 #CNF CONVERSION FUNCTIONS
 #------------------------------------------------------------------------------
 
+#Solves bidirectional equalities
 def resolve_eq(sentence):
     if sentence[0] == '<=>':
         new_condition1 = ['=>',sentence[1], sentence[2]]
@@ -96,6 +97,7 @@ def resolve_eq(sentence):
         if len(element)>=2 and type(element) != str:
             resolve_eq(element)
 
+#Solves implications
 def resolve_imp(sentence):
     if sentence[0] == '=>':
         element1 = ["not", sentence[1]]
@@ -109,7 +111,7 @@ def resolve_imp(sentence):
             resolve_imp(element)
             
             
-            
+#Applies negation rules            
 def apply_neg(sentence):
     
     if sentence[0] == "not":
@@ -142,7 +144,7 @@ def apply_neg(sentence):
         if len(element)>1 and type(element) != str:
             apply_neg(element)
             
-    
+#Applies the distributive rules    
 def distributive(sentence):
     global check
     if sentence[0] == "or":
@@ -166,6 +168,7 @@ def distributive(sentence):
             if len(element)>=3 and type(element) != str:
                 distributive(element)
 
+#Separates clauses by "and" conditions
 def separate_clauses(sentence):
     clauses = []
     percorrer = []
@@ -182,6 +185,7 @@ def separate_clauses(sentence):
             
     return clauses
 
+#Eliminates "or" conditions
 def eliminate_or(clauses):
     for clause in clauses:
         if clause[0] == "or":
@@ -194,6 +198,7 @@ def eliminate_or(clauses):
 #SIMPLIFICATION FUNCTIONS
 #------------------------------------------------------------------------------
 
+#Removes duplicate literals in each clause
 def remove_duplicates(clause): #A single clause is inputed
     newlist = []
     for literal in clause:
@@ -219,30 +224,28 @@ def remove_parens(clause): #This function removes excessive parentises in the cl
 #MAIN
 #------------------------------------------------------------------------------                
 
-
+#Stores the sentences in the txt file in "s"
 s = parser()
 
-#s = parser("p4.txt")
+#List where the cnf clauses will be stored
 cnf = []
+
 for sentence in s:
+    #Applies CNF rules
     clauses = convert(sentence)
     for clause in clauses:
         clause = remove_duplicates(clause) #removes duplicates inside each clause
-        cnf.append(clause)
+        cnf.append(clause) #Appends each clause to the cnf list
         
 #Remove excessive parentises after simplification
 for clause in cnf:
     remove_parens(clause)
 
-#print(cnf)
-
-#Write to TXT FILE
-#filepath='cnf.txt'
-#with open(filepath, 'w') as file_handler:
+#Passes clauses one by one to the solver.py program via std pipes
 for item in cnf:
     sys.stdout.write("%s" %item)
     sys.stdout.write("\n")
-#        file_handler.write("%s \n" % item)
+
 
 
 

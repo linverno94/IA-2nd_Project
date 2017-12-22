@@ -16,12 +16,14 @@ import copy
 #GENERAL FUNCTIONS
 #------------------------------------------------------------------------------
 
+#Checks if the inputed literal is negated
 def is_negated(literal):
     if len(literal) == 1:
         return False
     else:
         return True
-    
+
+#Checks if the inputed clause is a literal (unit clause)    
 def is_literal(sentence):
     if len(sentence) == 1:
         return True
@@ -30,6 +32,7 @@ def is_literal(sentence):
     else:
         return False
 
+#Returns the negation of a inputed literal
 def complement(literal):
     if is_negated(literal) == True:
         to_search = literal[1]
@@ -42,14 +45,11 @@ def complement(literal):
 
 def parser():
     try:
-        #info = open(filename, "r")
         list_sentences = []
         for line in sys.stdin.readlines():
-        #for line in info:
             sentence = eval(line)
             sentence = list(sentence)
             list_sentences.append(sentence)
-        #info.close
         return list_sentences
 
     except FileNotFoundError:
@@ -65,9 +65,11 @@ def find_compatible_clause(percorrer, start_index, to_search, already_solved):
     
     for j in range(start_index, len(percorrer)):
         if is_literal(percorrer[j]) == True and is_negated(percorrer[j]) == True:
+            #Checks if the clause is compatible and if the pair hasn't been resolved before
             if to_search == percorrer[j] and  [percorrer[start_index],percorrer[j]] not in already_solved:
                 return percorrer[j]
         else:
+            #Checks if the clause is compatible and if the pair hasn't been resolved before
             if to_search in percorrer[j] and [percorrer[start_index],percorrer[j]] not in already_solved:
                 return percorrer[j]
     
@@ -235,16 +237,14 @@ def remove_parens(clause): #This function removes excessive parentises in the cl
 #MAIN
 #------------------------------------------------------------------------------                
 
-#clauses = parser("cnf.txt")
-
+#Receives clauses via stdin
 clauses = parser()
 
 
-#APPLY SIMPLIFICATION RULES
+#Applies simplification rules
 apply_simplifications(clauses)
-print(clauses)
 
-if clauses:
+if clauses: #If there are still clauses after applying the simplification rules
     #Removes excessive parentises after simplifications
     for clause in clauses:
         remove_parens(clause)
@@ -255,57 +255,60 @@ if clauses:
     solution = False
     possible = True #Begin the while cycle
     i = 0 
-    already_solved = [] #keeps track of pairs of clauses already solved by resolution
+    already_solved = [] #keeps track of pairs of clauses already solved with resolution
 
-else:
+else: #No clauses to be analysed
     solution = False
     possible = False
 
 while(solution == False and possible == True):
-    #input()
-    to_analyse = percorrer[i]
-    #print("Analysing %s" %to_analyse)
-    #First it searches a compatible for resolution
+    to_analyse = percorrer[i] #Takes a new clause to be solved
     if is_literal(to_analyse) == True:
         to_search = complement(to_analyse)
-        #print(to_search)
+        #The negation of the literal being analysed will be searched in the 
+        #remaining clauses, and a compatible clause is returned only if the
+        #pair of clauses hasn't been resolved before
         compatible_clause = find_compatible_clause(percorrer, i, to_search, already_solved)
     else:
+        #if it is not a unit clause, every negated literal is search until
+        #a compatible clause is returned
         for element in to_analyse:
             to_search = complement(element)
-            #print(to_search)
             compatible_clause = find_compatible_clause(percorrer, i, to_search, already_solved)
             if compatible_clause != False:
                 break
     
-    #print("Found Compatible clause: %s" %compatible_clause)
     #If a compatible clause is found, it applys resolution
     if compatible_clause != False:
             result = resolution(to_analyse, compatible_clause)
+            #Appends to the "already_solved" list the pair of clauses solved
             already_solved.append([to_analyse, compatible_clause]) 
-            #print("Result %s" %result)
             if result == [] or result == True:
                 #A contradition is found
-                #print("FOUND CONTRADITION!")
                 solution = True
             else:
-                i = 0
+                #Applys simplifications to the resulted clause
                 remove_parens(result)
                 result = remove_duplicates(result)
                 remove_tautologies(result, True)
                 
                 if result != []:
-                    #print("Simplified result %s" %result)
+                    #The next iteration will start on the first clause on the 
+                    #"percorrer" list because a new result will be appended
+                    i = 0
+                    #The simplified result is appended to the "percorrer" list
                     percorrer.append(result)
-                    #print("New percorrer %s" %percorrer)
+                    #Applies simplifications to all clauses of the "percorrer" list
                     apply_simplifications(percorrer)
-                    #print("simplified %s" %percorrer)
+                    #Sorts the "percorrer" list
                     percorrer = sorted(percorrer, key=lambda item: (is_literal(item),-len(item)), reverse = True)
-                    #print("Sorted %s" %percorrer)
     else:
+        #If no compatible clause is found, a new clause should be analysed
         if(i< len(percorrer)-1):
             i +=1
         else:
+            #If there is no clause left to be solved, the inference cannot be
+            #proven
             possible = False
 
 
