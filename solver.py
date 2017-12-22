@@ -239,16 +239,18 @@ def remove_parens(clause): #This function removes excessive parentises in the cl
 
 clauses = parser()
 
+
 #APPLY SIMPLIFICATION RULES
 apply_simplifications(clauses)
+print(clauses)
 
 if clauses:
     #Removes excessive parentises after simplifications
     for clause in clauses:
         remove_parens(clause)
 
-    #Clauses are sorted by putting literals first and other clauses last
-    percorrer = sorted(clauses, key=lambda item: is_literal(item), reverse= True)
+    #Clauses are sorted by putting literals first and other clauses last in increasing length order
+    percorrer = sorted(clauses, key=lambda item: (is_literal(item),-len(item)), reverse = True)
     
     solution = False
     possible = True #Begin the while cycle
@@ -298,7 +300,7 @@ while(solution == False and possible == True):
                     #print("New percorrer %s" %percorrer)
                     apply_simplifications(percorrer)
                     #print("simplified %s" %percorrer)
-                    percorrer = sorted(percorrer, key=lambda item: is_literal(item), reverse= True)
+                    percorrer = sorted(percorrer, key=lambda item: (is_literal(item),-len(item)), reverse = True)
                     #print("Sorted %s" %percorrer)
     else:
         if(i< len(percorrer)-1):
@@ -308,5 +310,4 @@ while(solution == False and possible == True):
 
 
 print(solution)
-    
       
